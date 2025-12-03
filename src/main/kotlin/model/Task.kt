@@ -21,7 +21,6 @@ data class Task(
     val title: String,
     val completed: Boolean = false,
     val createdAt: LocalDateTime = LocalDateTime.now(),
-    val label: String,
 ) {
     companion object {
         /**
@@ -81,7 +80,7 @@ data class Task(
     fun toCSV(): String {
         val formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME
         val escapedTitle = title.replace("\"", "\"\"")
-        return "$id,\"$escapedTitle\",$completed,${createdAt.format(formatter)}, $label"
+        return "$id,\"$escapedTitle\",$completed,${createdAt.format(formatter)}"
     }
 
     /**
@@ -105,7 +104,6 @@ data class Task(
             "completed" to completed,
             "createdAt" to createdAt.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")),
             "createdAtISO" to createdAt.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
-            "label" to label
         )
 }
 
