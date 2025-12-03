@@ -21,6 +21,7 @@ data class Task(
     val title: String,
     val completed: Boolean = false,
     val createdAt: LocalDateTime = LocalDateTime.now(),
+    val label: String = "no input",
 ) {
     companion object {
         /**
@@ -32,7 +33,6 @@ data class Task(
          * Maximum allowed length for task title.
          */
         const val MAX_TITLE_LENGTH = 100
-
         /**
          * Validate task title against business rules.
          *
@@ -80,7 +80,7 @@ data class Task(
     fun toCSV(): String {
         val formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME
         val escapedTitle = title.replace("\"", "\"\"")
-        return "$id,\"$escapedTitle\",$completed,${createdAt.format(formatter)}"
+        return "$id,\"$escapedTitle\",$completed,${createdAt.format(formatter)},$label"
     }
 
     /**
@@ -104,6 +104,7 @@ data class Task(
             "completed" to completed,
             "createdAt" to createdAt.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")),
             "createdAtISO" to createdAt.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
+            "label" to label
         )
 }
 

@@ -82,11 +82,17 @@ private suspend fun ApplicationCall.handleCreateTask(store: TaskStore) {
     timed("T3_add", jsMode()) {
         val params = receiveParameters()
         val title = params["title"]?.trim() ?: ""
+        val label = params["label"]?.trim() ?: "NULL ERROR"
         val query = params["q"].toQuery()
 
-        when (val validation = Task.validate(title)) {
-            is ValidationResult.Error -> handleCreateTaskError(store, title, query, validation)
-            ValidationResult.Success -> handleCreateTaskSuccess(store, title, query)
+        val titleValidation = Task.validate(title)
+
+        if (titleValidation is ValidationResult.Error) {
+            handleCreateTaskError(store, title, query, label, titleValidation)
+        }
+        when (val labelValidation = Task.validate(label)) {
+            is ValidationResult.Error -> handleCreateTaskError(store, title, query, label, labelValidation)
+            ValidationResult.Success -> handleCreateTaskSuccess(store, title, query, label)
         }
     }
 }
@@ -95,16 +101,24 @@ private suspend fun ApplicationCall.handleCreateTaskError(
     store: TaskStore,
     title: String,
     query: String,
+    label: String,
     validation: ValidationResult.Error,
 ) {
-    val outcome =
+    val titleOutcome =
         when {
             title.isBlank() -> "blank_title"
             title.length < Task.MIN_TITLE_LENGTH -> "min_length"
             title.length > Task.MAX_TITLE_LENGTH -> "max_length"
             else -> "invalid_title"
         }
-    logValidationError("T3_add", outcome)
+    val labelOutcome = 
+        when {
+            label.isBlank() -> "blank_label"
+            label.length < Task.MIN_TITLE_LENGTH -> "min_length"
+            label.length > Task.MAX_TITLE_LENGTH -> "max_length"
+            else -> "invalid_label"
+        }
+    logValidationError("T3_add", titleOutcome)
     if (isHtmxRequest()) {
         val paginated = paginateTasks(store, query, 1)
         val statusHtml = messageStatusFragment(validation.message, isError = true)
@@ -118,9 +132,10 @@ private suspend fun ApplicationCall.handleCreateTaskError(
 private suspend fun ApplicationCall.handleCreateTaskSuccess(
     store: TaskStore,
     title: String,
+    label: String,
     query: String,
 ) {
-    val task = Task(title = title)
+    val task = Task(title = title, label = label)
     store.add(task)
 
     if (isHtmxRequest()) {
