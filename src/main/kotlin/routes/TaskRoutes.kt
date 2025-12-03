@@ -42,6 +42,7 @@ fun Routing.configureTaskRoutes(store: TaskStore = TaskStore()) {
     delete("/tasks/{id}") { call.handleDeleteTask(store) }  // HTMX path (RESTful)
     post("/tasks/{id}/delete") { call.handleDeleteTask(store) }  // No-JS fallback
     get("/tasks/search") { call.handleSearchTasks(store) }
+    get("/tasks/{label}") { call.handleSearchTasks(store) }
 }
 
 /**
@@ -119,6 +120,7 @@ private suspend fun ApplicationCall.handleCreateTaskSuccess(
     store: TaskStore,
     title: String,
     query: String,
+    label: String,
 ) {
     val task = Task(title = title)
     store.add(task)

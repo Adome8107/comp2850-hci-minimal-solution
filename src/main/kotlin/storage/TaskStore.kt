@@ -20,8 +20,8 @@ import java.time.format.DateTimeParseException
  *
  * **CSV schema**:
  * ```
- * id,title,completed,created_at
- * 7a9f2c3d-...,\"Buy groceries\",false,2025-10-15T14:32:10
+ * id,title,completed,created_at, label
+ * 7a9f2c3d-...,\"Buy groceries\",false,2025-10-15T14:32:10,groceries
  * ```
  *
  * @property csvFile CSV file path (default: data/tasks.csv)
@@ -33,7 +33,7 @@ class TaskStore(
         private val CSV_FORMAT =
             CSVFormat.DEFAULT
                 .builder()
-                .setHeader("id", "title", "completed", "created_at")
+                .setHeader("id", "title", "completed", "created_at", "label")
                 .setSkipHeaderRecord(true)
                 .build()
 
@@ -51,7 +51,7 @@ class TaskStore(
         if (csvFile.length() == EMPTY_FILE_SIZE) {
             FileWriter(csvFile).use { writer ->
                 CSVPrinter(writer, CSV_FORMAT).use { printer ->
-                    printer.printRecord("id", "title", "completed", "created_at")
+                    printer.printRecord("id", "title", "completed", "created_at", "label")
                 }
             }
         }
@@ -74,6 +74,7 @@ class TaskStore(
                             title = record[1],
                             completed = record[2].toBoolean(),
                             createdAt = LocalDateTime.parse(record[3], DateTimeFormatter.ISO_LOCAL_DATE_TIME),
+                            label = record[4]
                         )
                     } catch (e: IndexOutOfBoundsException) {
                         // CSV row has missing fields - skip this row
@@ -102,6 +103,14 @@ class TaskStore(
     fun getById(id: String): Task? = getAll().find { it.id == id }
 
     /**
+     * Get task by label
+     *
+     * @param label Task label
+     * @return Task if found, null otherwise
+     */
+    fun getByLabel(label: String): Task? = getAll().find { it.label == label }
+
+    /**
      * Add new task to storage.
      *
      * **Note**: Does not check for duplicate IDs. Caller should ensure uniqueness.
@@ -113,7 +122,7 @@ class TaskStore(
         if (!csvFile.exists() || csvFile.length() == EMPTY_FILE_SIZE) {
             csvFile.parentFile?.mkdirs()
             FileWriter(csvFile, false).use { writer ->
-                writer.write("id,title,completed,created_at\n")
+                writer.write("id,title,completed,created_at,label\n")
             }
         }
 
@@ -124,6 +133,7 @@ class TaskStore(
                     task.title,
                     task.completed,
                     task.createdAt.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
+                    task.label,
                 )
             }
         }
@@ -197,6 +207,24 @@ class TaskStore(
         }
     }
 
+    /** NOT FINISHED
+     * Search tasks by label (case-insensitive substring match).
+     *
+     * **Example**: query="invoice" matches "COMP2850[Assignment]" and "COMP2870[Assingment]",
+     *   where [Assignment] is the label "Assignment".
+     *
+     * @param query Label search query
+     * @return List of matching tasks with queried label
+     */
+    fun searchByLabel(query: String): List<Task> {
+        if (query.isBlank()) return getAll()
+
+        val normalizedQuery = query.trim().lowercase()
+        return getAll().filter { task ->
+            task.label.lowercase().contains(normalizedQuery)
+        }
+    }
+
     /**
      * Write all tasks to CSV file (overwrites existing file).
      * Used by update() and delete() after modifying task list.
@@ -206,13 +234,14 @@ class TaskStore(
     private fun writeAll(tasks: List<Task>) {
         FileWriter(csvFile, false).use { writer ->
             CSVPrinter(writer, CSV_FORMAT).use { printer ->
-                printer.printRecord("id", "title", "completed", "created_at")
+                printer.printRecord("id", "title", "completed", "created_at", "label")
                 tasks.forEach { task ->
                     printer.printRecord(
                         task.id,
                         task.title,
                         task.completed,
                         task.createdAt.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
+                        task.label,
                     )
                 }
             }
@@ -228,7 +257,7 @@ class TaskStore(
         csvFile.createNewFile()
         FileWriter(csvFile).use { writer ->
             CSVPrinter(writer, CSV_FORMAT).use { printer ->
-                printer.printRecord("id", "title", "completed", "created_at")
+                printer.printRecord("id", "title", "completed", "created_at", "label")
             }
         }
     }
