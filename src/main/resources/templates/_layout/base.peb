@@ -49,6 +49,7 @@
       align-items: center;
     }
 
+
     /* Override Pico.css button color for WCAG 1.4.3 AA compliance */
     button[type="submit"],
     button {

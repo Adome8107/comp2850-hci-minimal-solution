@@ -33,7 +33,7 @@ class TaskStore(
         private val CSV_FORMAT =
             CSVFormat.DEFAULT
                 .builder()
-                .setHeader("id", "title", "completed", "created_at", "label")
+                .setHeader("id", "title", "completed", "created_at", "label", "deadline")
                 .setSkipHeaderRecord(true)
                 .build()
 
@@ -51,7 +51,7 @@ class TaskStore(
         if (csvFile.length() == EMPTY_FILE_SIZE) {
             FileWriter(csvFile).use { writer ->
                 CSVPrinter(writer, CSV_FORMAT).use { printer ->
-                    printer.printRecord("id", "title", "completed", "created_at", "label")
+                    printer.printRecord("id", "title", "completed", "created_at", "label", "deadline")
                 }
             }
         }
@@ -75,6 +75,7 @@ class TaskStore(
                             completed = record[2].toBoolean(),
                             createdAt = LocalDateTime.parse(record[3], DateTimeFormatter.ISO_LOCAL_DATE_TIME),
                             label = record[4],
+                            deadline = LocalDateTime.parse(record[5], DateTimeFormatter.ISO_LOCAL_DATE_TIME),
                         )
                     } catch (e: IndexOutOfBoundsException) {
                         // CSV row has missing fields - skip this row
@@ -114,7 +115,7 @@ class TaskStore(
         if (!csvFile.exists() || csvFile.length() == EMPTY_FILE_SIZE) {
             csvFile.parentFile?.mkdirs()
             FileWriter(csvFile, false).use { writer ->
-                writer.write("id,title,completed,created_at,label\n")
+                writer.write("id,title,completed,created_at,label,deadline\n")
             }
         }
 
@@ -126,6 +127,7 @@ class TaskStore(
                     task.completed,
                     task.createdAt.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
                     task.label,
+                    task.deadline,
                 )
             }
         }
@@ -161,6 +163,23 @@ class TaskStore(
     fun delete(id: String): Boolean {
         val tasks = getAll().toMutableList()
         val removed = tasks.removeIf { it.id == id }
+
+        if (removed) {
+            writeAll(tasks)
+        }
+
+        return removed
+    }
+
+    /**
+     * Delete task by label.
+     *
+     * @param label Task label to delete
+     * @return true if task found and deleted, false if not found
+     */
+    fun deleteLabel(label: String): Boolean {
+        val tasks = getAll().toMutableList()
+        val removed = tasks.removeIf {it.label == label}
 
         if (removed) {
             writeAll(tasks)
@@ -208,7 +227,7 @@ class TaskStore(
     private fun writeAll(tasks: List<Task>) {
         FileWriter(csvFile, false).use { writer ->
             CSVPrinter(writer, CSV_FORMAT).use { printer ->
-                printer.printRecord("id", "title", "completed", "created_at", "label")
+                printer.printRecord("id", "title", "completed", "created_at", "label", "deadline")
                 tasks.forEach { task ->
                     printer.printRecord(
                         task.id,
@@ -216,6 +235,7 @@ class TaskStore(
                         task.completed,
                         task.createdAt.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
                         task.label,
+                        task.deadline,
                     )
                 }
             }
@@ -231,7 +251,7 @@ class TaskStore(
         csvFile.createNewFile()
         FileWriter(csvFile).use { writer ->
             CSVPrinter(writer, CSV_FORMAT).use { printer ->
-                printer.printRecord("id", "title", "completed", "created_at", "label")
+                printer.printRecord("id", "title", "completed", "created_at", "label", "deadline")
             }
         }
     }

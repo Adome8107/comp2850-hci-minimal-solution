@@ -31,7 +31,7 @@ object TaskRepository {
             file.writeText("id,title\n")
         } else {
             file.readLines().drop(1).forEach { line ->
-                val parts = line.split(",", limit = 2)
+                val parts = line.split(",", limit = 3)
                 if (parts.size == 2) {
                     val id = parts[0].toIntOrNull() ?: return@forEach
                     tasks.add(Task(id, parts[1]))

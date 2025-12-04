@@ -22,6 +22,10 @@ import utils.Page
 import utils.jsMode
 import utils.logValidationError
 import utils.timed
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeParseException
+
 
 private const val PAGE_SIZE = 10
 
@@ -41,6 +45,8 @@ fun Routing.configureTaskRoutes(store: TaskStore = TaskStore()) {
     post("/tasks/{id}/toggle") { call.handleToggleTask(store) }
     delete("/tasks/{id}") { call.handleDeleteTask(store) }  // HTMX path (RESTful)
     post("/tasks/{id}/delete") { call.handleDeleteTask(store) }  // No-JS fallback
+    delete("/tasks/{label}") { call.handleDeleteLabel(store) }
+    post("tasks/{label}/delete") { call.handleDeleteLabel(store) }
     get("/tasks/search") { call.handleSearchTasks(store) }
 }
 
@@ -83,16 +89,17 @@ private suspend fun ApplicationCall.handleCreateTask(store: TaskStore) {
         val params = receiveParameters()
         val title = params["title"]?.trim() ?: ""
         val label = params["label"]?.trim() ?: "NULL ERROR"
+        val deadline: LocalDateTime = LocalDateTime.parse(params["deadline"], DateTimeFormatter.ISO_LOCAL_DATE_TIME) ?: LocalDateTime.parse("2025-12-00T00:00:00", DateTimeFormatter.ISO_LOCAL_DATE_TIME)
         val query = params["q"].toQuery()
 
         val titleValidation = Task.validate(title)
 
         if (titleValidation is ValidationResult.Error) {
-            handleCreateTaskError(store, title, query, label, titleValidation)
+            handleCreateTaskError(store = store, title = title, label = label, query = query, deadline = deadline, validation = titleValidation)
         }
         when (val labelValidation = Task.validate(label)) {
-            is ValidationResult.Error -> handleCreateTaskError(store, title, query, label, labelValidation)
-            ValidationResult.Success -> handleCreateTaskSuccess(store, title, query, label)
+            is ValidationResult.Error -> handleCreateTaskError(store = store, title = title, label = label, query = query, deadline = deadline, validation = labelValidation)
+            ValidationResult.Success -> handleCreateTaskSuccess(store = store, title = title, label = label, deadline = deadline, query = query)
         }
     }
 }
@@ -102,6 +109,7 @@ private suspend fun ApplicationCall.handleCreateTaskError(
     title: String,
     query: String,
     label: String,
+    deadline: LocalDateTime,
     validation: ValidationResult.Error,
 ) {
     val titleOutcome =
@@ -133,9 +141,10 @@ private suspend fun ApplicationCall.handleCreateTaskSuccess(
     store: TaskStore,
     title: String,
     label: String,
+    deadline: LocalDateTime,
     query: String,
 ) {
-    val task = Task(title = title, label = label)
+    val task = Task(title = title, label = label, deadline = deadline)
     store.add(task)
 
     if (isHtmxRequest()) {
@@ -203,6 +212,43 @@ private suspend fun ApplicationCall.handleDeleteTask(store: TaskStore) {
 
         val task = store.getById(id)
         val deleted = store.delete(id)
+
+        if (!deleted) {
+            respond(HttpStatusCode.NotFound, "Task not found")
+            return@timed
+        }
+
+        if (isHtmxRequest()) {
+            val statusHtml =
+                messageStatusFragment(
+                    """Task "${task?.title ?: "Unknown"}" deleted.""",
+                )
+            respondText(statusHtml, ContentType.Text.Html)
+        } else {
+            response.headers.append("Location", "/tasks")
+            respond(HttpStatusCode.SeeOther)
+        }
+    }
+}
+
+private suspend fun ApplicationCall.handleDeleteLabel(store: TaskStore) {
+    timed("T4a_deleteLabel", jsMode()) {
+        val id =
+            parameters["id"] ?: run {
+                respond(HttpStatusCode.BadRequest, "Missing task id")
+                return@timed
+            }
+
+        val label =
+            parameters["label"] ?: run {
+                respond(HttpStatusCode.BadRequest, "Missing task label")
+                return@timed
+            }
+        // val task = store.getById(id)
+        // val deleted = store.delete(id)
+
+        val task = store.getById(id)
+        val deleted = store.deleteLabel(label)
 
         if (!deleted) {
             respond(HttpStatusCode.NotFound, "Task not found")

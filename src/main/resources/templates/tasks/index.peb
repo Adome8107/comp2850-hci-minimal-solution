@@ -37,36 +37,43 @@
               hx-target="#task-area"
               hx-swap="innerHTML"
               hx-on::after-request="this.reset()">
+            
+            <div class="container">
+                {# Task title input #}
+                <div>
+                    <label for="task-title">Task Title</label>
+                    <input type="text"
+                        id="task-title"
+                        name="title"
+                        required
+                        {% if error == "title" %}aria-invalid="true" aria-describedby="title-hint title-error"{% else %}aria-describedby="title-hint"{% endif %}
+                        placeholder="e.g., Buy milk">
+                </div>
 
-            <label for="task-title">Task Title</label>
-            <input type="text"
-                   id="task-title"
-                   name="title"
-                   required
-                   {% if error == "title" %}aria-invalid="true" aria-describedby="title-hint title-error"{% else %}aria-describedby="title-hint"{% endif %}
-                   placeholder="e.g., Buy milk">
+                {# Title hint #}
+                <small id="title-hint">Keep it short and specific.</small>
+                {% if error == "title" %}
+                <p id="title-error" class="error-message">
+                    {% if msg == "too_long" %}Title is too long (max 200 characters){% else %}Title is required. Please enter at least one character.{% endif %}
+                </p>
+                {% endif %}
+                
+                {# Task label input #}
+                <div>
+                    <label for="label-title">LABEL</label>
+                    <input type="text"
+                        id="label-title"
+                        name="label"
+                        required
+                        {% if error == "label" %}aria-invalid="true" aria-describedby="title-hint title-error"{% else %}aria-describedby="title-hint"{% endif %}
+                        placeholder="e.g., Groceries">
+                </div>
+            </div>
 
-            <small id="title-hint">Keep it short and specific.</small>
-            {% if error == "title" %}
-            <p id="title-error" class="error-message">
-                {% if msg == "too_long" %}Title is too long (max 200 characters){% else %}Title is required. Please enter at least one character.{% endif %}
-            </p>
-            {% endif %}
-
-            <label for="label-title">LABEL</label>
-            <input type="text"
-                   id="label-title"
-                   name="label"
-                   required
-                   {% if error == "label" %}aria-invalid="true" aria-describedby="title-hint title-error"{% else %}aria-describedby="title-hint"{% endif %}
-                   placeholder="e.g., Groceries">
-
-            <small id="title-hint">Keep it short and specific.</small>
-            {% if error == "title" %}
-            <p id="title-error" class="error-message">
-                {% if msg == "too_long" %}LABEL is too long (max 200 characters){% else %}LABEL is required. Please enter at least one character.{% endif %}
-            </p>
-            {% endif %}
+            <label for="deadline-date">DEADLINE</label>
+            <input type="datetime-local"
+                   id="deadline-date"
+                   name="deadline">
 
             <button type="submit">Add Task</button>
         </form>
@@ -113,6 +120,23 @@
             <small id="search-hint">Filters tasks as you type; works without JavaScript.</small>
             <button type="submit">Apply Filter</button>
         </form>
+
+        <form action="/tasks/{{ task.label }}/delete" method="post" style="display: inline;"
+            hx-delete="/tasks/{{ task.label }}"
+            hx-target="#task-{{ task.label }}"
+            hx-swap="outerHTML"
+            hx-confirm="Delete all tasks associated with '{{ task.label }}'?">
+
+            <label for="delete-label">Delete all tasks with a label</label>
+            <input type="delete"
+                   id="label"
+                   name="label"
+                   placeholder="Type to delete..."
+                   aria-describedby="search-hint">
+
+            <button type="submit">Delete label</button>
+        </form>
+
     </section>
 
     {# Task List #}

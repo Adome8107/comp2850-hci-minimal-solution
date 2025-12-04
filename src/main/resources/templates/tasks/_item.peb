@@ -1,5 +1,5 @@
 <li id="task-{{ task.id }}" class="task-view">
-  <span class="task-title">{{ task.title }}{{ [task.label] }}</span>
+  <span class="task-title">{{ task.title }}{{ [task.label] }}{{ " | DUE: #{task.deadline | date("dd/MM/yyyy")}" }}</span>
 
   <form action="/tasks/{{ task.id }}/edit" method="get" style="display: inline;"
         hx-get="/tasks/{{ task.id }}/edit"
