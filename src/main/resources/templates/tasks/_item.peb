@@ -15,4 +15,14 @@
         hx-confirm="Delete the task '{{ task.title }}'?">
     <button type="submit" aria-label="Delete task: {{ task.title }}">Delete</button>
   </form>
+
+  <form action="/tasks/delete/{{ task.label }}" method="post" style="display: inline;"
+        hx-delete="/tasks/htmxDelete/{{ task.label }}"
+        hx-target="#task-{{ task.id }}"
+        hx-swap="outerHTML"
+        hx-confirm="Delete all tasks with the label '{{ task.label }}'?">
+    <button type="submit" aria-label="Delete task: {{ task.title }}">Delete</button>
+  </form>
+
+  </form>
 </li>

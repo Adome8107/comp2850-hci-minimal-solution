@@ -112,7 +112,7 @@
             <label for="search-label">Filter by label</label>
             <input type="search"
                    id="search-label"
-                   name="l"
+                   name="label"
                    placeholder="Type to filter..."
                    aria-describedby="search-hint"
                    value="{{ query | default('') }}">
@@ -121,20 +121,8 @@
             <button type="submit">Apply Filter</button>
         </form>
 
-        <form action="/tasks/{{ task.label }}/delete" method="post" style="display: inline;"
-            hx-delete="/tasks/{{ task.label }}"
-            hx-target="#task-{{ task.label }}"
-            hx-swap="outerHTML"
-            hx-confirm="Delete all tasks associated with '{{ task.label }}'?">
+        
 
-            <label for="delete-label">Delete all tasks with a label</label>
-            <input type="delete"
-                   id="label"
-                   name="label"
-                   placeholder="Type to delete..."
-                   aria-describedby="search-hint">
-
-            <button type="submit">Delete label</button>
         </form>
 
     </section>

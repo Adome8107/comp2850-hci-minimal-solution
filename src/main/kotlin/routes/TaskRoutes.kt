@@ -43,10 +43,10 @@ fun Routing.configureTaskRoutes(store: TaskStore = TaskStore()) {
     post("/tasks/{id}/edit") { call.handleUpdateTask(store) }
     get("/tasks/{id}/view") { call.handleViewTask(store) }
     post("/tasks/{id}/toggle") { call.handleToggleTask(store) }
+    //delete("/tasks/htmxDelete/{label}") { call.handleDeleteLabel(store) }
+    //post("/tasks/delete/{label}") { call.handleDeleteLabel(store) }
     delete("/tasks/{id}") { call.handleDeleteTask(store) }  // HTMX path (RESTful)
     post("/tasks/{id}/delete") { call.handleDeleteTask(store) }  // No-JS fallback
-    delete("/tasks/{label}") { call.handleDeleteLabel(store) }
-    post("tasks/{label}/delete") { call.handleDeleteLabel(store) }
     get("/tasks/search") { call.handleSearchTasks(store) }
 }
 
@@ -91,6 +91,7 @@ private suspend fun ApplicationCall.handleCreateTask(store: TaskStore) {
         val label = params["label"]?.trim() ?: "NULL ERROR"
         val deadline: LocalDateTime = LocalDateTime.parse(params["deadline"], DateTimeFormatter.ISO_LOCAL_DATE_TIME) ?: LocalDateTime.parse("2025-12-00T00:00:00", DateTimeFormatter.ISO_LOCAL_DATE_TIME)
         val query = params["q"].toQuery()
+        val labelQuery = params["label"].toQuery()
 
         val titleValidation = Task.validate(title)
 
@@ -203,6 +204,7 @@ private suspend fun ApplicationCall.handleToggleTask(store: TaskStore) {
  * Handle task deletion.
  */
 private suspend fun ApplicationCall.handleDeleteTask(store: TaskStore) {
+    System.err.println("MADE IT INTO THE ogFUNC")
     timed("T4_delete", jsMode()) {
         val id =
             parameters["id"] ?: run {
@@ -232,22 +234,23 @@ private suspend fun ApplicationCall.handleDeleteTask(store: TaskStore) {
 }
 
 private suspend fun ApplicationCall.handleDeleteLabel(store: TaskStore) {
+    System.err.println("MADE IT INTO THE FUNC, $parameters")
     timed("T4a_deleteLabel", jsMode()) {
-        val id =
-            parameters["id"] ?: run {
-                respond(HttpStatusCode.BadRequest, "Missing task id")
-                return@timed
-            }
-
         val label =
             parameters["label"] ?: run {
                 respond(HttpStatusCode.BadRequest, "Missing task label")
                 return@timed
             }
+
+        // val label =
+        //     parameters["label"] ?: run {
+        //         respond(HttpStatusCode.BadRequest, "Missing task label")
+        //         return@timed
+        //     }
         // val task = store.getById(id)
         // val deleted = store.delete(id)
 
-        val task = store.getById(id)
+        System.err.println("$store: $label")
         val deleted = store.deleteLabel(label)
 
         if (!deleted) {
@@ -258,7 +261,7 @@ private suspend fun ApplicationCall.handleDeleteLabel(store: TaskStore) {
         if (isHtmxRequest()) {
             val statusHtml =
                 messageStatusFragment(
-                    """Task "${task?.title ?: "Unknown"}" deleted.""",
+                    """Tasks with the label \"${label }\" have been deleted.""",
                 )
             respondText(statusHtml, ContentType.Text.Html)
         } else {
