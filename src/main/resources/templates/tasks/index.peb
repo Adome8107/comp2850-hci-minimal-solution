@@ -75,7 +75,7 @@
                    id="deadline-date"
                    name="deadline">
 
-            <button type="submit">Add Task</button>
+            <button type="submit">Add Task➕</button>
         </form>
     </section>
 
@@ -90,7 +90,7 @@
               hx-swap="innerHTML"
               hx-push-url="true">
 
-            <label for="search-query">Filter by title</label>
+            <label for="search-query">Filter by title or label</label>
             <input type="search"
                    id="search-query"
                    name="q"
@@ -99,26 +99,7 @@
                    value="{{ query | default('') }}">
 
             <small id="search-hint">Filters tasks as you type; works without JavaScript.</small>
-            <button type="submit">Apply Filter</button>
-        </form>
-
-        <form action="/tasks" method="get"
-              hx-get="/tasks/fragment"
-              hx-trigger="keyup changed delay:300ms from:#search-query, submit"
-              hx-target="#task-area"
-              hx-swap="innerHTML"
-              hx-push-url="true">
-
-            <label for="search-label">Filter by label</label>
-            <input type="search"
-                   id="search-label"
-                   name="label"
-                   placeholder="Type to filter..."
-                   aria-describedby="search-hint"
-                   value="{{ query | default('') }}">
-
-            <small id="search-hint">Filters tasks as you type; works without JavaScript.</small>
-            <button type="submit">Apply Filter</button>
+            <button type="submit">Apply Filter🔎</button>
         </form>
 
         

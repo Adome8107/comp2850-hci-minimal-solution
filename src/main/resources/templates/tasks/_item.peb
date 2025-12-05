@@ -13,15 +13,15 @@
         hx-target="#task-{{ task.id }}"
         hx-swap="outerHTML"
         hx-confirm="Delete the task '{{ task.title }}'?">
-    <button type="submit" aria-label="Delete task: {{ task.title }}">Delete</button>
+    <button style="background-color:#eb3d34;" type="submit" aria-label="Delete task: {{ task.title }}">Delete🗑</button>
   </form>
 
-  <form action="/tasks/delete/{{ task.label }}" method="post" style="display: inline;"
-        hx-delete="/tasks/htmxDelete/{{ task.label }}"
+  <form action="/tasks/deletelabel/{{ task.label }}" method="post" style="display: inline;"
+        hx-delete="/tasks/deletelabel/{{ task.label }}"
         hx-target="#task-{{ task.id }}"
         hx-swap="outerHTML"
         hx-confirm="Delete all tasks with the label '{{ task.label }}'?">
-    <button type="submit" aria-label="Delete task: {{ task.title }}">Delete</button>
+    <button style="background-color:#d11727;" type="submit" aria-label="Delete task: {{ task.title }}">⚠️‼️Delete Label‼️⚠️</button>
   </form>
 
   </form>

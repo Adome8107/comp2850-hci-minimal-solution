@@ -179,7 +179,12 @@ class TaskStore(
      */
     fun deleteLabel(label: String): Boolean {
         val tasks = getAll().toMutableList()
-        val removed = tasks.removeIf {it.label == label}
+        var loopRemoved: Boolean = true
+        var removed: Boolean = false
+        while(loopRemoved) {
+            loopRemoved = tasks.removeIf { it.label == label }
+            removed = true
+        }
 
         if (removed) {
             writeAll(tasks)
@@ -214,7 +219,7 @@ class TaskStore(
 
         val normalizedQuery = query.trim().lowercase()
         return getAll().filter { task ->
-            task.title.lowercase().contains(normalizedQuery)
+            task.title.lowercase().contains(normalizedQuery) || task.label.lowercase().contains(normalizedQuery)
         }
     }
 

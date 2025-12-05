@@ -48,6 +48,14 @@
       gap: 0.5rem;
       align-items: center;
     }
+    .container {
+      display: grid;
+      grid-template-columns: auto auto auto;
+    }
+
+    .container div {
+      text-align: center;
+    }
 
 
     /* Override Pico.css button color for WCAG 1.4.3 AA compliance */

@@ -43,8 +43,8 @@ fun Routing.configureTaskRoutes(store: TaskStore = TaskStore()) {
     post("/tasks/{id}/edit") { call.handleUpdateTask(store) }
     get("/tasks/{id}/view") { call.handleViewTask(store) }
     post("/tasks/{id}/toggle") { call.handleToggleTask(store) }
-    //delete("/tasks/htmxDelete/{label}") { call.handleDeleteLabel(store) }
-    //post("/tasks/delete/{label}") { call.handleDeleteLabel(store) }
+    delete("/tasks/deletelabel/{label}") { call.handleDeleteLabel(store) }
+    post("/tasks/deletelabel/{label}") { call.handleDeleteLabel(store) }
     delete("/tasks/{id}") { call.handleDeleteTask(store) }  // HTMX path (RESTful)
     post("/tasks/{id}/delete") { call.handleDeleteTask(store) }  // No-JS fallback
     get("/tasks/search") { call.handleSearchTasks(store) }
@@ -87,11 +87,17 @@ private suspend fun ApplicationCall.handleTaskFragment(store: TaskStore) {
 private suspend fun ApplicationCall.handleCreateTask(store: TaskStore) {
     timed("T3_add", jsMode()) {
         val params = receiveParameters()
-        val title = params["title"]?.trim() ?: ""
-        val label = params["label"]?.trim() ?: "NULL ERROR"
-        val deadline: LocalDateTime = LocalDateTime.parse(params["deadline"], DateTimeFormatter.ISO_LOCAL_DATE_TIME) ?: LocalDateTime.parse("2025-12-00T00:00:00", DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+        val title = params["title"]?.trim() ?: "BLANK TITLE"
+        val label = params["label"]?.trim() ?: "BLANK LABEL"
+        var deadlineValue = params["deadline"]
+        var deadline:LocalDateTime = LocalDateTime.parse("2025-12-01T00:00:00", DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+        when (deadlineValue?.isBlank()) { 
+            false -> deadline = LocalDateTime.parse(params["deadline"], DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+            else  -> deadline = LocalDateTime.parse("2025-12-01T00:00:00", DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+        }
         val query = params["q"].toQuery()
         val labelQuery = params["label"].toQuery()
+        System.err.println("$params, $title, $label, $deadline, $query, $labelQuery")
 
         val titleValidation = Task.validate(title)
 
